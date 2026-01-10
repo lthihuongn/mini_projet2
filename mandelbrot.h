@@ -1,6 +1,10 @@
 #ifndef MANDELBROT_H
 #define MANDELBROT_H
 
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "pix.h"
 
 #define MANDELBROT_LARGEUR 900
@@ -9,7 +13,7 @@
 #define MANDELBROT_Y1 1.0
 #define MANDELBROT_X2 1.0
 #define MANDELBROT_Y2 -1.0
-#define MAX_ITER 85
+#define MAX_ITER 1000
 
 typedef struct {
     char red;

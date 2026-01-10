@@ -1,6 +1,6 @@
 #include "mandelbrot.h"
 #include "file.h"
-#include <math.h>
+
 
 void creer_color() {
 }
@@ -74,16 +74,24 @@ mandel_pic new_mandel(int width, int height, double Xmin, double Ymin, double sc
     m.Xmin = Xmin;
     m.Ymin = Ymin;
     m.scale = scale;
-    m.pixwidth = 1.0 / scale;
+    //m.pixwidth = 1.0 / scale;
     m.convrg = (int*)malloc(width * height * sizeof(int));
 
     m.Xmax = Xmin + (scale * 3.0);
     m.Ymax = Ymin + (scale * 3.0 * height / width);
     m.pixwidth = scale * 3.0/width;
 
+    // Calculer et stocker les valeurs de convergence pour chaque pixel
+    for (int py = 0; py < m.height; py++) {
+        for (int px = 0; px < m.width; px++) {
+            double x = m.Xmin + px * m.pixwidth;
+            double y = m.Ymax - py * m.pixwidth;
+            int index = py * m.width + px;
+            m.convrg[index] = convergence(x, y);
+        }
+    }
+
     return m;
-
-
 }
 
 void save_mandel(mandel_pic m, const char* filename) {
@@ -94,11 +102,12 @@ void save_mandel(mandel_pic m, const char* filename) {
 
     for (int py = 0; py < m.height; py++) {
         for (int px = 0; px < m.width; px++) {
-            double x = m.Xmin + px * m.pixwidth;
-            double y = m.Ymax - py * m.pixwidth;
+            //double x = m.Xmin + px * m.pixwidth;
+            //double y = m.Ymax - py * m.pixwidth;
 
-            int c = convergence(x, y);
+            //int c = convergence(x, y);
             int index = py * m.width + px;
+            int c = m.convrg[index]; // Utiliser la valeur deja calculee
 
             creer_couleur_mandelbrot(&p.pixel[index], c);
         }
@@ -109,7 +118,45 @@ void save_mandel(mandel_pic m, const char* filename) {
 }
 
 int interpolate(mandel_pic m, double x, double y) {
+    // Vérifier si (x,y) est dans les limites de l'image
+    if (x < m.Xmin || x > m.Xmax || y < m.Ymin || y > m.Ymax) {
+        return -1; // Point hors limites
+    }
 
+    // Convertir les coordonnées (x,y) en indices de pixels
+    double px_exact = (x - m.Xmin) / m.pixwidth;
+    double py_exact = (m.Ymax - y) / m.pixwidth;
+
+    // Trouver les 4 pixels qui entourent le point (x,y)
+    int px0 = (int)px_exact;
+    int py0 = (int)py_exact;
+    int px1 = px0 + 1;
+    int py1 = py0 + 1;
+
+    // Vérifier les limites pour les 4 points
+    if (px1 >= m.width) px1 = m.width - 1;
+    if (py1 >= m.height) py1 = m.height - 1;
+    if (px0 < 0) px0 = 0;
+    if (py0 < 0) py0 = 0;
+
+    // Récupérer les valeurs de convergence des 4 points
+    int c00 = m.convrg[py0 * m.width + px0];
+    int c01 = m.convrg[py0 * m.width + px1];
+    int c10 = m.convrg[py1 * m.width + px0];
+    int c11 = m.convrg[py1 * m.width + px1];
+
+    // Test aléatoire : forcer le recalcul pour 1% des pixels
+    if (random() < RAND_MAX / 100) {
+        return -1;
+    }
+
+    // Vérifier si les 4 points sont égaux
+    if (c00 == c01 && c01 == c10 && c10 == c11) {
+        return c00; // Tous égaux, retourner cette valeur
+    }
+
+    // Sinon, retourner -1 pour forcer le calcul avec convergence()
+    return -1;
 }
 
 //pixel (0-900, 0-600) en coordonnees math (-2 a 1, 1 a -1)
@@ -174,7 +221,8 @@ void creer_pixmap_mandelbrot_zoom(Pixmap *p, double x1, double y1, double x2, do
             double x = pixel_vers_x(px, x1, x2, MANDELBROT_LARGEUR);
             double y = pixel_vers_y(py, y1, y2, MANDELBROT_HAUTEUR);
             
-            int c = convergence(x, y);
+            int c = 
+            (x, y);
             
             int index = calculer_index(px, py, MANDELBROT_LARGEUR);
             
