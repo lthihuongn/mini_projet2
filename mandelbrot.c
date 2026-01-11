@@ -2,13 +2,21 @@
 #include "file.h"
 
 
-void creer_color() {
+void creer_color(){
 }
-void saisir_color() {
+void saisir_color(){
 }
-void afficher_color() {
+void afficher_color(){
 }
-void effacer_color() {
+void effacer_color(){
+}
+void creer_mandel_pic(){
+}
+void saisir_mandel_pic(){
+}
+void afficher_mandel_pic(){
+}
+void effacer_mandel_pic(){
 }
 
 int convergence(double x, double y){
@@ -268,4 +276,63 @@ void creer_serie_zoom_mandelbrot(int nb_images, double x_target, double y_target
         ecrire_fichier(nom_fichier, &p);
         supprimer_pixmap(&p);
     }
+}
+
+// Nouvelle version de creer_serie_zoom_mandelbrot sans tout reaclculer
+void generer_serie_zoom(double xmin, double ymin, double scale, int nb_images, int num_depart) {
+    printf("Génération de %d images à partir de l'image %d\n", nb_images, num_depart);
+    printf("Point de départ: Xmin=%.10f, Ymin=%.10f, scale=%.10f\n", xmin, ymin, scale);
+    
+    mandel_pic prev = new_mandel(900, 600, xmin, ymin, scale);
+    char nom_fichier[30];
+    sprintf(nom_fichier, "im%d.ppm", num_depart);
+    save_mandel(prev, nom_fichier);
+    printf("Image %d générée\n", num_depart);
+    
+    for (int i = 1; i < nb_images; i++) {
+        // Calculer le nouveau scale (zoom progressif)
+        double factor = 0.95; // Zoom de 5% à chaque image
+        double new_scale = scale * pow(factor, i);
+        
+        // Créer la nouvelle image
+        mandel_pic next;
+        next.width = 900;
+        next.height = 600;
+        next.Xmin = xmin;
+        next.Ymin = ymin;
+        next.scale = new_scale;
+        next.convrg = (int*)malloc(900 * 600 * sizeof(int));
+        next.Xmax = next.Xmin + (next.scale * 3.0);
+        next.Ymax = next.Ymin + (next.scale * 3.0 * next.height / next.width);
+        next.pixwidth = next.scale * 3.0 / next.width;
+        
+        // Utiliser interpolate() pour accélérer
+        int interpolated = 0, calculated = 0;
+        for (int py = 0; py < next.height; py++) {
+            for (int px = 0; px < next.width; px++) {
+                double x = next.Xmin + px * next.pixwidth;
+                double y = next.Ymax - py * next.pixwidth;
+                int index = py * next.width + px;
+                
+                int c = interpolate(prev, x, y);
+                if (c == -1) {
+                    c = convergence(x, y);
+                    calculated++;
+                } else {
+                    interpolated++;
+                }
+                next.convrg[index] = c;
+            }
+        }
+        
+        sprintf(nom_fichier, "im%d.ppm", num_depart + i);
+        save_mandel(next, nom_fichier);
+        printf("Image %d générée (%d interpolés, %d calculés)\n", 
+               num_depart + i, interpolated, calculated);
+        
+        free(prev.convrg);
+        prev = next;
+    }
+    
+    free(prev.convrg);
 }

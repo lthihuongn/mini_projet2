@@ -1,9 +1,9 @@
 #ifndef MANDELBROT_H
 #define MANDELBROT_H
 
-#include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include "pix.h"
 
@@ -38,6 +38,11 @@ void saisir_color();
 void afficher_color();
 void effacer_color();
 
+void creer_mandel_pic();
+void saisir_mandel_pic();
+void afficher_mandel_pic();
+void effacer_mandel_pic();
+
 
 int convergence(double x, double y);
 color palette(int c);
@@ -47,6 +52,7 @@ int interpolate(mandel_pic m, double x, double y);
 void creer_pixmap_mandelbrot(Pixmap *p);
 void creer_pixmap_mandelbrot_zoom(Pixmap *p, double x1, double y1, double x2, double y2);
 void creer_serie_zoom_mandelbrot(int nb_images, double x_target, double y_target);
+void generer_serie_zoom(double xmin, double ymin, double scale, int nb_images, int num_depart);
 
 double pixel_vers_x(int px, double x1, double x2, int largeur);
 double pixel_vers_y(int py, double y1, double y2, int hauteur);
