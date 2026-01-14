@@ -89,7 +89,7 @@ mandel_pic new_mandel(int width, int height, double Xmin, double Ymin, double sc
     m.Ymax = Ymin + (scale * 3.0 * height / width);
     m.pixwidth = scale * 3.0/width;
 
-    // Calculer et stocker les valeurs de convergence pour chaque pixel
+    // convergence pour chaque pixel
     for (int py = 0; py < m.height; py++) {
         for (int px = 0; px < m.width; px++) {
             double x = m.Xmin + px * m.pixwidth;
@@ -126,28 +126,28 @@ void save_mandel(mandel_pic m, const char* filename) {
 }
 
 int interpolate(mandel_pic m, double x, double y) {
-    // Vérifier si (x,y) est dans les limites de l'image
+    // verifie si (x,y) est dans l'image
     if (x < m.Xmin || x > m.Xmax || y < m.Ymin || y > m.Ymax) {
-        return -1; // Point hors limites
+        return -1; // hors limites
     }
 
-    // Convertir les coordonnées (x,y) en indices de pixels
+    // conversion coordonnees math en coordonnees pixel
     double px_exact = (x - m.Xmin) / m.pixwidth;
     double py_exact = (m.Ymax - y) / m.pixwidth;
 
-    // Trouver les 4 pixels qui entourent le point (x,y)
+    //trouve 4 pixels qui entourent le point (x,y)
     int px0 = (int)px_exact;
     int py0 = (int)py_exact;
     int px1 = px0 + 1;
     int py1 = py0 + 1;
 
-    // Vérifier les limites pour les 4 points
+    // limites pour les 4 points
     if (px1 >= m.width) px1 = m.width - 1;
     if (py1 >= m.height) py1 = m.height - 1;
     if (px0 < 0) px0 = 0;
     if (py0 < 0) py0 = 0;
 
-    // Récupérer les valeurs de convergence des 4 points
+    // convergence des 4 points
     int c00 = m.convrg[py0 * m.width + px0];
     int c01 = m.convrg[py0 * m.width + px1];
     int c10 = m.convrg[py1 * m.width + px0];
@@ -158,12 +158,11 @@ int interpolate(mandel_pic m, double x, double y) {
         return -1;
     }
 
-    // Vérifier si les 4 points sont égaux
+    // si les 4 points sont égaux
     if (c00 == c01 && c01 == c10 && c10 == c11) {
-        return c00; // Tous égaux, retourner cette valeur
+        return c00;
     }
 
-    // Sinon, retourner -1 pour forcer le calcul avec convergence()
     return -1;
 }
 
@@ -270,31 +269,28 @@ void creer_serie_zoom_mandelbrot(int nb_images, double x_target, double y_target
         //creer l'image
         creer_pixmap_mandelbrot_zoom(&p, x1, y1, x2, y2);
         
-        char nom_fichier[20];
-        sprintf(nom_fichier, "im%d.ppm", i);
+        char nom_fichier[30];
+        sprintf(nom_fichier, "im/im%d.ppm", i);
         
         ecrire_fichier(nom_fichier, &p);
         supprimer_pixmap(&p);
     }
 }
 
-// Nouvelle version de creer_serie_zoom_mandelbrot sans tout reaclculer
+// nouvelle creer_serie_zoom_mandelbrot sans tout recalculer
 void generer_serie_zoom(double xmin, double ymin, double scale, int nb_images, int num_depart) {
-    printf("Génération de %d images à partir de l'image %d\n", nb_images, num_depart);
-    printf("Point de départ: Xmin=%.10f, Ymin=%.10f, scale=%.10f\n", xmin, ymin, scale);
     
     mandel_pic prev = new_mandel(900, 600, xmin, ymin, scale);
-    char nom_fichier[30];
-    sprintf(nom_fichier, "im%d.ppm", num_depart);
+    char nom_fichier[40];
+    sprintf(nom_fichier, "im/im%d.ppm", num_depart);
     save_mandel(prev, nom_fichier);
-    printf("Image %d générée\n", num_depart);
     
     for (int i = 1; i < nb_images; i++) {
-        // Calculer le nouveau scale (zoom progressif)
-        double factor = 0.95; // Zoom de 5% à chaque image
+        //calcul nouveau scale (zoom progressif)
+        double factor = 0.95; // Zoom de 5% a chaque image
         double new_scale = scale * pow(factor, i);
         
-        // Créer la nouvelle image
+        //nouvelle image
         mandel_pic next;
         next.width = 900;
         next.height = 600;
@@ -306,8 +302,9 @@ void generer_serie_zoom(double xmin, double ymin, double scale, int nb_images, i
         next.Ymax = next.Ymin + (next.scale * 3.0 * next.height / next.width);
         next.pixwidth = next.scale * 3.0 / next.width;
         
-        // Utiliser interpolate() pour accélérer
-        int interpolated = 0, calculated = 0;
+        // utiliser interpolate() pour accelerer
+        int interpolated = 0;
+        int calculated = 0;
         for (int py = 0; py < next.height; py++) {
             for (int px = 0; px < next.width; px++) {
                 double x = next.Xmin + px * next.pixwidth;
@@ -325,10 +322,8 @@ void generer_serie_zoom(double xmin, double ymin, double scale, int nb_images, i
             }
         }
         
-        sprintf(nom_fichier, "im%d.ppm", num_depart + i);
+        sprintf(nom_fichier, "im/im%d.ppm", num_depart + i);
         save_mandel(next, nom_fichier);
-        printf("Image %d générée (%d interpolés, %d calculés)\n", 
-               num_depart + i, interpolated, calculated);
         
         free(prev.convrg);
         prev = next;

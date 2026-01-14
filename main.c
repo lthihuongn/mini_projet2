@@ -31,6 +31,19 @@ int main(int argc, char const *argv[]){
     free(m.convrg);
 
 
+
+    //5)
+    if (argc == 6) {
+        for (int i = 0; i < atoi(argv[4]); i++) {
+            char filename[100];
+            int img_num = atoi(argv[5]) + i;
+            sprintf(filename, "im/im%03d.ppm", img_num);
+            mandel_pic m = new_mandel(900, 600, atof(argv[1]), atof(argv[2]), atof(argv[3]) * pow(0.95, img_num));
+            save_mandel(m, filename);
+            free(m.convrg);
+        }
+        return 0;
+    }
     
     // Mode sans argument : lancer le calcul complet
     // Lancer 4 processus en parallèle
@@ -57,6 +70,10 @@ int main(int argc, char const *argv[]){
     // Processus 4 : images 30-39 (sans & pour attendre)
     sprintf(cmd, "./main %.10f %.10f %.10f 10 30", xmin, ymin, scale);
     system(cmd);
+    
+    // Assemblage en vidéo
+    system("ffmpeg -y -i im/im%03d.ppm video.mpg");
+    printf("Vidéo creee : video.mpg\n");
     
     return 0;
 }
